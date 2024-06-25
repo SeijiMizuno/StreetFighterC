@@ -20,11 +20,11 @@ gameStatus *gameStatusCreate () {
 
 void updateGravity (player *element) {
     // atualiza posição y do player
-    element->hitbox->y += element->vy;
+    element->bodyHitbox->y += element->vy;
     element->vy += GRAVITY;
 
-    if (element->hitbox->y + element->hitbox->height >= Y_GROUND) {
-        element->hitbox->y = Y_GROUND - element->hitbox->height;
+    if (element->bodyHitbox->y + element->bodyHitbox->height >= Y_GROUND) {
+        element->bodyHitbox->y = Y_GROUND - element->bodyHitbox->height;
         element->vy = 0;
         element->onGround = 1;
     }

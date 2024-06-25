@@ -18,6 +18,16 @@
 #define L_KICK_DAM 40
 #define H_KICK_DAM 45
 
+#define L_PUNCH_W 65
+#define L_PUNCH_H 35
+#define H_PUNCH_W 0
+#define H_PUNCH_H 0
+#define L_KICK_W 0
+#define L_KICK_H 0
+#define H_KICK_W 0
+#define H_KICK_H 0
+// SHOULDER Y = BODYHITBOX Y + 30
+
 #define ATK_COOLDOWN 10
 
 typedef struct {

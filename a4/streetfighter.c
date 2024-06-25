@@ -1,4 +1,4 @@
-// gcc -g streetfighter.c player.c joystick.c hitbox.c -o AS $(pkg-config allegro-5 allegro_main-5 allegro_font-5 allegro_primitives-5 allegro_image-5 --libs --cflags)
+// gcc -g streetfighter.c player.c joystick.c hitbox.c gameinfo.c -o AS $(pkg-config allegro-5 allegro_main-5 allegro_font-5 allegro_primitives-5 allegro_image-5 --libs --cflags)
 
 #include <stdio.h>
 #include <allegro5/allegro5.h>
@@ -102,16 +102,22 @@ void processKeyboard (int keycode, player *p1) {
 }
 
 void drawPlayer (player *p, unsigned char enableHitbox) {
+    float spriteW = al_get_bitmap_width(p->sprite);
+    float spriteH = al_get_bitmap_height(p->sprite);
+
     if (enableHitbox) {
         if (p->isCrouch && p->onGround) {
-            al_draw_rectangle(p->hitbox->x, p->hitbox->y, p->hitbox->x + p->hitbox->width, p->hitbox->y + p->hitbox->crouchHeight, al_map_rgb(0,255,0), 1);
+            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->crouchHeight, al_map_rgb(0,255,0), 1);
         }
         else {
-            al_draw_rectangle(p->hitbox->x, p->hitbox->y, p->hitbox->x + p->hitbox->width, p->hitbox->y + p->hitbox->height, al_map_rgb(0,255,0), 1);
+            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->height, al_map_rgb(0,255,0), 1);
         }
+    }
 
+    // al_draw_scaled_bitmap(p->sprite, 0, 0, spriteW, spriteH, p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->width, p->bodyHitbox->height, 0);
+    al_draw_scaled_bitmap(p->sprite, 0, 0, spriteW, spriteH, p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->width + spriteW, p->bodyHitbox->height, 0);
+    al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + 30, p->bodyHitbox->x + p->bodyHitbox->width + L_PUNCH_W, p->bodyHitbox->y + 30 + L_PUNCH_H, al_map_rgb(255,0,0), 1);
 
-    } // adicionar função else, para não exibir hitbox;
 }
 
 int main () {
@@ -137,12 +143,11 @@ int main () {
 
 	al_start_timer(timer);
     
-    p1->sprite = al_load_bitmap("./ryu.png");
+    // p1->sprite = al_load_bitmap("./ryu.png");
+    p1->sprite = al_load_bitmap("./ryuLPunch.png");
     ALLEGRO_COLOR imgBackgroundColor = al_get_pixel(p1->sprite, 0, 0);
     al_convert_mask_to_alpha(p1->sprite, imgBackgroundColor);
     al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
-    float spriteW = al_get_bitmap_width(p1->sprite);
-    float spriteH = al_get_bitmap_height(p1->sprite);
 
     while (1) {
         al_wait_for_event(queue, &event);
@@ -153,8 +158,7 @@ int main () {
             updatePlayer(p1);
             updateLifeBar(p1);
             updateAtkCooldown(p1);
-            al_draw_rectangle(0, Y_GROUND, X_SCREEN, Y_GROUND, al_map_rgb(255,0,0), 1);
-            al_draw_scaled_bitmap(p1->sprite, 0, 0, spriteW, spriteH, p1->hitbox->x, p1->hitbox->y, p1->hitbox->width, p1->hitbox->height, 0);
+            al_draw_rectangle(0, Y_GROUND, X_SCREEN, Y_GROUND, al_map_rgb(255,0,0), 1); // dwsenho da linha do chão
             drawPlayer(p1, 1);
             al_flip_display();
         }
