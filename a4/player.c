@@ -4,9 +4,9 @@
 #include "player.h"
 #include "hitbox.h"
 #include "joystick.h"
-#include "cenario.h"
+#include "gameinfo.h"
 
-player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned short widht, unsigned short height) {
+player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned short widht, unsigned short height, unsigned char isHuman) {
     player *ret_player = (player*) malloc(sizeof(player));
     if (!ret_player)
         return NULL;
@@ -21,9 +21,14 @@ player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned sho
     ret_player->roundWin = 0;
     ret_player->isDamaged = 0;
     ret_player->atkCooldown = 0;
+    ret_player->isHuman = isHuman;
+    if (isHuman == 0)
+        ret_player->facing = 1; // criação do p2
+    else
+        ret_player->facing = 0; // criação do p1
     ret_player->sprite = NULL;
     ret_player->action = joystickCreate();
-    ret_player->hitbox = hitboxCreate(init_x, init_y, widht, height);
+    ret_player->bodyHitbox = hitboxCreate(init_x, init_y, widht, height);
 
     return ret_player;
 }
@@ -55,25 +60,25 @@ void playerAction (player *element, unsigned char action) {
             
         case 1: // esquerda
             element->vx = -MOVE_STEP;
-            element->hitbox->x += element->vx;
+            element->bodyHitbox->x += element->vx;
             element->vx = 0;
             break;
             
         case 2: // baixo
             if (element->onGround)
                 if ((element->isCrouch == 1)){
-                    if (element->hitbox->y < (Y_GROUND - element->hitbox->crouchHeight))
-                        element->hitbox->y = Y_GROUND - element->hitbox->crouchHeight;
+                    if (element->bodyHitbox->y < (Y_GROUND - element->bodyHitbox->crouchHeight))
+                        element->bodyHitbox->y = Y_GROUND - element->bodyHitbox->crouchHeight;
                 }
                 else {
-                    element->hitbox->y = Y_GROUND - element->hitbox->height;
+                    element->bodyHitbox->y = Y_GROUND - element->bodyHitbox->height;
                     element->getUp = 0;
                 }
             break;
             
         case 3: // direita
             element->vx = MOVE_STEP;
-            element->hitbox->x += element->vx;
+            element->bodyHitbox->x += element->vx;
             element->vx = 0;
             break;
             
@@ -100,7 +105,7 @@ void playerAction (player *element, unsigned char action) {
 void playerDestroy (player *element) {
     if (element) {
         joystickDestroy (element->action);
-        hitboxDestroy (element->hitbox);
+        hitboxDestroy (element->bodyHitbox);
         if (element->sprite)
             al_destroy_bitmap(element->sprite);
     }

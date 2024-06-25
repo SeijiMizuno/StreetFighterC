@@ -7,7 +7,7 @@
 #include <allegro5/allegro_image.h>
 
 #include "player.h"
-#include "cenario.h"
+#include "gameinfo.h"
 
 
 void updatePlayer (player *player) {
@@ -129,7 +129,9 @@ int main () {
 	al_register_event_source(queue, al_get_display_event_source(disp));
 	al_register_event_source(queue, al_get_timer_event_source(timer));
 
-    player *p1 = playerCreate(INIT_X1_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT);
+    player *p1 = playerCreate(INIT_X1_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT, 1);
+    player *p2 = playerCreate(INIT_X2_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT, 0);
+    gameStatus *gameStatus = gameStatusCreate();
 
     ALLEGRO_EVENT event;
 
@@ -167,6 +169,7 @@ int main () {
     al_destroy_display(disp);
     al_destroy_timer(timer);
     al_destroy_event_queue(queue);
+    gameStatusDestroy(gameStatus);
     playerDestroy(p1);
 
     return 0;

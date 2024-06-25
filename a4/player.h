@@ -30,12 +30,14 @@ typedef struct {
     unsigned char roundWin;     // guarda a quantidade de rounds ganhos pelo player (se roundWin == 2, fim da partida)
     unsigned short isDamaged;   // flag que indica se um jogador está "ferido". Enquanto um jogador estiver ferido, sua barra de vida decai
     unsigned char atkCooldown;  // contador que evita spam de ataques, sempre que algum ataque é chamado, esse contador é setado para ATK_COOLDOWN
+    unsigned char isHuman;      // flag que indica se o jogador é humano ou bot (se isHuman == 1, jogador é humano);
+    unsigned char facing;       // flag que indica o lado que o jogador está olhando (se facing == 1, jogador está olhando para esquerda);
     ALLEGRO_BITMAP *sprite;
     joystick *action;
-    hitbox *hitbox;
+    hitbox *bodyHitbox;
 } player;
 
-player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned short max_x, unsigned short max_y);
+player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned short widht, unsigned short height, unsigned char isHuman);
 void toggleState (unsigned char *toBeToggled);
 /***
  * nota: 'action' se refere à ação que deverá ser efetuada.
