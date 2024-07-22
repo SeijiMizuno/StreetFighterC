@@ -19,7 +19,7 @@
 #define INIT_X1_POS 100
 #define INIT_X2_POS 500
 
-#define GRAVITY 1
+#define GRAVITY 4
 
 typedef struct {
     unsigned short playersDistance;
@@ -28,8 +28,10 @@ typedef struct {
 
 gameStatus *gameStatusCreate ();
 void updateGravity (player *element);
-// void updateLifeBar (player *p1, player *p2) {
-void updateLifeBar (player *element);
+void updateLifeBar (player *p1, player *p2);
+unsigned char checkWallCollision (player *element);
+unsigned char checkPlayerCollision (player *p1, player *p2);
+void updateFacing (player *p1, player *p2);
 void gameStatusDestroy (gameStatus *gameStatus);
 
 #endif

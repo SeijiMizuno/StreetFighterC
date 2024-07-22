@@ -8,7 +8,7 @@
 #include "joystick.h"
 
 #define MOVE_STEP 10
-#define JUMP_VEL 20
+#define JUMP_VEL 45
 
 #define P_WIDTH 116
 #define P_HEIGHT 218
@@ -19,13 +19,11 @@
 #define H_KICK_DAM 45
 
 #define L_PUNCH_W 65
-#define L_PUNCH_H 35
 #define H_PUNCH_W 0
-#define H_PUNCH_H 0
+#define PUNCH_H 35
 #define L_KICK_W 0
-#define L_KICK_H 0
 #define H_KICK_W 0
-#define H_KICK_H 0
+#define KICK_H 0
 // SHOULDER Y = BODYHITBOX Y + 30
 
 #define ATK_COOLDOWN 10
@@ -45,9 +43,10 @@ typedef struct {
     ALLEGRO_BITMAP *sprite;
     joystick *action;
     hitbox *bodyHitbox;
+    hitbox *atkHitbox;
 } player;
 
-player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned short widht, unsigned short height, unsigned char isHuman);
+player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned short widht, unsigned short height);
 void toggleState (unsigned char *toBeToggled);
 /***
  * nota: 'action' se refere à ação que deverá ser efetuada.
@@ -62,7 +61,7 @@ void toggleState (unsigned char *toBeToggled);
  */
 void setAtkCooldown (player *player);
 void updateAtkCooldown (player *player);
-void playerAction (player *element, unsigned char action);
+void playerAction (player *p1, player *p2, unsigned char action);
 void playerDestroy (player *element);
 
 #endif

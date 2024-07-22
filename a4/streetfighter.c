@@ -10,42 +10,75 @@
 #include "gameinfo.h"
 
 
-void updatePlayer (player *player) {
-    if (player->action->up) {
-        playerAction(player, 0);
+void updatePlayer (player *p1, player *p2) {
+    if (p1->action->up) {
+        playerAction(p1, p2, 0);
     } 
-    if (player->action->left) {
-        playerAction(player, 1);
+    if (p1->action->left) {
+        playerAction(p1, p2, 1);
     }
-    if (player->action->down) {
-        playerAction(player, 2);
+    if (p1->action->down) {
+        playerAction(p1, p2, 2);
     }
-    else if (player->getUp) {
-        playerAction(player, 2);
+    else if (p1->getUp) {
+        playerAction(p1, p2, 2);
     }
-    if (player->action->right) {
-        playerAction(player, 3);
+    if (p1->action->right) {
+        playerAction(p1, p2, 3);
     }
-    if (player->action->light_punch) {
-        playerAction(player, 4);
-        toggleState(&player->action->light_punch);
+    if (p1->action->light_punch) {
+        playerAction(p1, p2, 4);
+        toggleState(&p1->action->light_punch);
     }
-    if (player->action->hard_punch) {
-        playerAction(player, 5);
-        toggleState(&player->action->hard_punch);
+    if (p1->action->hard_punch) {
+        playerAction(p1, p2, 5);
+        toggleState(&p1->action->hard_punch);
     }
-    if (player->action->light_kick) {
-        playerAction(player, 6);
-        toggleState(&player->action->light_kick);
+    if (p1->action->light_kick) {
+        playerAction(p1, p2, 6);
+        toggleState(&p1->action->light_kick);
     }
-    if (player->action->hard_kick) {
-        playerAction(player, 7);
-        toggleState(&player->action->hard_kick);
+    if (p1->action->hard_kick) {
+        playerAction(p1, p2, 7);
+        toggleState(&p1->action->hard_kick);
+    }
+
+    if (p2->action->up) {
+        playerAction(p1, p2, 8);
+    } 
+    if (p2->action->left) {
+        playerAction(p1, p2, 9);
+    }
+    if (p2->action->down) {
+        playerAction(p1, p2, 10);
+    }
+    else if (p2->getUp) {
+        playerAction(p1, p2, 10);
+    }
+    if (p2->action->right) {
+        playerAction(p1, p2, 11);
+    }
+    if (p2->action->light_punch) {
+        playerAction(p1, p2, 12);
+        toggleState(&p2->action->light_punch);
+    }
+    if (p2->action->hard_punch) {
+        playerAction(p1, p2, 13);
+        toggleState(&p2->action->hard_punch);
+    }
+    if (p2->action->light_kick) {
+        playerAction(p1, p2, 14);
+        toggleState(&p2->action->light_kick);
+    }
+    if (p2->action->hard_kick) {
+        playerAction(p1, p2, 15);
+        toggleState(&p2->action->hard_kick);
     }
 }
 
-void processKeyboard (int keycode, player *p1) {
+void processKeyboard (int keycode, player *p1, player *p2) {
     switch (keycode) {
+        // player 1
         case ALLEGRO_KEY_A:
             joystickLeft(p1->action);
             break;
@@ -98,25 +131,88 @@ void processKeyboard (int keycode, player *p1) {
             }
             toggleState(&p1->action->pressedHK);
             break;
+
+
+        // player 2
+        case 82: // left arrow
+            joystickLeft(p2->action);
+            break;
+
+        case 84: // up arrow
+            joystickUp(p2->action);
+            if (p2->onGround)
+                toggleState(&p2->onGround);
+            break;
+
+        case 85: // down arrow
+            joystickDown(p2->action);
+            toggleState(&p2->isCrouch);
+            if (p2->isCrouch == 0 && p2->onGround)
+                p2->getUp = 1;
+            break;
+
+        case 83: // right arrow
+            joystickRight(p2->action);
+            break;
+        
+        case ALLEGRO_KEY_PAD_5:
+            if (p2->action->pressedLP == 0 && p2->atkCooldown == 0) {
+                setAtkCooldown (p2);
+                joystickLightPunch(p2->action);
+            }
+            toggleState(&p2->action->pressedLP);
+            break;
+        
+        case ALLEGRO_KEY_PAD_6:
+            if (p2->action->pressedHP == 0 && p2->atkCooldown == 0) {
+                setAtkCooldown (p2);
+                joystickHardPunch(p2->action);
+            }
+            toggleState(&p2->action->pressedHP);
+            break;
+
+        case ALLEGRO_KEY_PAD_2:
+            if (p2->action->pressedLK == 0 && p2->atkCooldown == 0) {
+                setAtkCooldown (p2);
+                joystickLightKick(p2->action);
+            }
+            toggleState(&p2->action->pressedLK);
+            break;
+        
+        case ALLEGRO_KEY_PAD_3:
+            if (p2->action->pressedHK == 0 && p2->atkCooldown == 0) {
+                setAtkCooldown (p2);
+                joystickHardKick(p2->action);
+            }
+            toggleState(&p2->action->pressedHK);
+            break;
     }
 }
 
 void drawPlayer (player *p, unsigned char enableHitbox) {
-    float spriteW = al_get_bitmap_width(p->sprite);
-    float spriteH = al_get_bitmap_height(p->sprite);
+    // float spriteW = al_get_bitmap_width(p->sprite);
+    // float spriteH = al_get_bitmap_height(p->sprite);
+    ALLEGRO_COLOR cor;
 
+    if (p->character_id == 0)
+        cor = al_map_rgb (0,255,0);
+    else cor = al_map_rgb (0,0,255);
     if (enableHitbox) {
         if (p->isCrouch && p->onGround) {
-            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->crouchHeight, al_map_rgb(0,255,0), 1);
+            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->crouchHeight, cor, 1);
         }
         else {
-            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->height, al_map_rgb(0,255,0), 1);
+            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->height, cor, 1);
         }
+        if (p->facing == 0)
+            al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width - 5, p->bodyHitbox->y + 20, p->bodyHitbox->x + p->bodyHitbox->width - 1, p->bodyHitbox->y + 30, cor, 1);
+        else
+            al_draw_rectangle(p->bodyHitbox->x + 1, p->bodyHitbox->y + 20, p->bodyHitbox->x + 5, p->bodyHitbox->y + 30, cor, 1);
     }
 
+    // al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + 30, p->bodyHitbox->x + p->bodyHitbox->width + L_PUNCH_W, p->bodyHitbox->y + 30 + PUNCH_H, al_map_rgb(255,0,0), 1);
     // al_draw_scaled_bitmap(p->sprite, 0, 0, spriteW, spriteH, p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->width, p->bodyHitbox->height, 0);
-    al_draw_scaled_bitmap(p->sprite, 0, 0, spriteW, spriteH, p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->width + spriteW, p->bodyHitbox->height, 0);
-    al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + 30, p->bodyHitbox->x + p->bodyHitbox->width + L_PUNCH_W, p->bodyHitbox->y + 30 + L_PUNCH_H, al_map_rgb(255,0,0), 1);
+    // al_draw_scaled_bitmap(p->sprite, 0, 0, spriteW, spriteH, p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->width + spriteW, p->bodyHitbox->height, 0);
 
 }
 
@@ -135,16 +231,23 @@ int main () {
 	al_register_event_source(queue, al_get_display_event_source(disp));
 	al_register_event_source(queue, al_get_timer_event_source(timer));
 
-    player *p1 = playerCreate(INIT_X1_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT, 1);
-    player *p2 = playerCreate(INIT_X2_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT, 0);
+    player *p1 = playerCreate(INIT_X1_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT);
+    player *p2 = playerCreate(INIT_X2_POS, Y_GROUND-P_HEIGHT, P_WIDTH, P_HEIGHT);
+    
+    // inicialização padrão do player2
+    p2->character_id = 1;
+    p2->facing = 1;
+    p2->isHuman = 0;
+    
     gameStatus *gameStatus = gameStatusCreate();
+
 
     ALLEGRO_EVENT event;
 
 	al_start_timer(timer);
     
     // p1->sprite = al_load_bitmap("./ryu.png");
-    p1->sprite = al_load_bitmap("./ryuLPunch.png");
+    p1->sprite = al_load_bitmap("./img/ryuLPunch.png");
     ALLEGRO_COLOR imgBackgroundColor = al_get_pixel(p1->sprite, 0, 0);
     al_convert_mask_to_alpha(p1->sprite, imgBackgroundColor);
     al_set_blender(ALLEGRO_ADD, ALLEGRO_ALPHA, ALLEGRO_INVERSE_ALPHA);
@@ -153,19 +256,32 @@ int main () {
         al_wait_for_event(queue, &event);
         
         if (event.type == ALLEGRO_EVENT_TIMER) {
-            al_clear_to_color(al_map_rgb(0,0,10));
+            al_clear_to_color(al_map_rgb(10,10,20));
+
             updateGravity(p1);
-            updatePlayer(p1);
-            updateLifeBar(p1);
+            updateGravity(p2);
+            
+            updatePlayer(p1, p2);
+
+            updateFacing(p1, p2);
+
+            
+            updateLifeBar(p1, p2);
+            
             updateAtkCooldown(p1);
-            al_draw_rectangle(0, Y_GROUND, X_SCREEN, Y_GROUND, al_map_rgb(255,0,0), 1); // dwsenho da linha do chão
+            
+            al_draw_rectangle(0, Y_GROUND + 2, X_SCREEN, Y_GROUND + 2, al_map_rgb(255,0,0), 1); // desenho da linha do chão
+            
             drawPlayer(p1, 1);
+            drawPlayer(p2, 1);
             al_flip_display();
+    // printf("%d p1 y + h\n%d p2 y\n\n", p1->bodyHitbox->y + p1->bodyHitbox->height, p2->bodyHitbox->y);
+
         }
         else if (event.type == ALLEGRO_EVENT_KEY_DOWN || event.type == ALLEGRO_EVENT_KEY_UP) {
             if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)
                 break;
-            processKeyboard (event.keyboard.keycode, p1);
+            processKeyboard (event.keyboard.keycode, p1, p2);
         }
     }
 
