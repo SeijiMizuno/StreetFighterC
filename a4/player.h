@@ -9,9 +9,12 @@
 
 #define MOVE_STEP 10
 #define JUMP_VEL 45
+// #define JUMP_VEL 20
+#define JUMP_STUN 22
 
 #define P_WIDTH 116
 #define P_HEIGHT 218
+#define P_CROUCH_HEIGHT P_HEIGHT / 2
 
 #define L_PUNCH_DAM 30
 #define H_PUNCH_DAM 35
@@ -32,7 +35,8 @@ typedef struct {
     unsigned char character_id;
     signed short hp;
     signed char vx, vy;
-    unsigned char onGround;
+    signed char airStun;        // velocidade do jogador quando está preso em um movimento horizontal no ar
+    unsigned char onGround;     // flag que indica se o jogador está no chão;
     unsigned char isCrouch;     // flag que indica se está em pé (0) ou agachado (1)
     unsigned char getUp;        // flag que indica se é necessário se levantar (ativado quando há o KEY_UP da tecla 's')
     unsigned char roundWin;     // guarda a quantidade de rounds ganhos pelo player (se roundWin == 2, fim da partida)

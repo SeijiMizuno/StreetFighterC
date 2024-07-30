@@ -12,10 +12,18 @@
 
 void updatePlayer (player *p1, player *p2) {
     if (p1->action->up) {
+        if (p1->airStun == 0) {
+            if (p1->action->left)
+                p1->airStun = -JUMP_STUN;
+            else if (p1->action->right)
+                p1->airStun = JUMP_STUN;
+        }
         playerAction(p1, p2, 0);
+        toggleState(&p1->action->up);
     } 
     if (p1->action->left) {
-        playerAction(p1, p2, 1);
+        if (p1->onGround)
+            playerAction(p1, p2, 1);
     }
     if (p1->action->down) {
         playerAction(p1, p2, 2);
@@ -24,7 +32,8 @@ void updatePlayer (player *p1, player *p2) {
         playerAction(p1, p2, 2);
     }
     if (p1->action->right) {
-        playerAction(p1, p2, 3);
+        if (p1->onGround)
+            playerAction(p1, p2, 3);
     }
     if (p1->action->light_punch) {
         playerAction(p1, p2, 4);
@@ -44,10 +53,18 @@ void updatePlayer (player *p1, player *p2) {
     }
 
     if (p2->action->up) {
+        if (p2->airStun == 0) {
+            if (p2->action->left)
+                p2->airStun = -JUMP_STUN;
+            else if (p2->action->right)
+                p2->airStun = JUMP_STUN;
+        }
         playerAction(p1, p2, 8);
+        toggleState(&p2->action->up);
     } 
     if (p2->action->left) {
-        playerAction(p1, p2, 9);
+        if (p2->onGround)
+            playerAction(p1, p2, 9);
     }
     if (p2->action->down) {
         playerAction(p1, p2, 10);
@@ -56,7 +73,8 @@ void updatePlayer (player *p1, player *p2) {
         playerAction(p1, p2, 10);
     }
     if (p2->action->right) {
-        playerAction(p1, p2, 11);
+        if (p2->onGround)
+            playerAction(p1, p2, 11);
     }
     if (p2->action->light_punch) {
         playerAction(p1, p2, 12);
@@ -84,9 +102,13 @@ void processKeyboard (int keycode, player *p1, player *p2) {
             break;
 
         case ALLEGRO_KEY_W:
-            joystickUp(p1->action);
-            if (p1->onGround)
-                toggleState(&p1->onGround);
+            if (p1->action->pressedUp == 0) {
+                joystickUp(p1->action);
+                if (p1->onGround)
+                    toggleState(&p1->onGround);
+                printf("W\n");
+            }
+            toggleState(&p1->action->pressedUp);
             break;
 
         case ALLEGRO_KEY_S:
@@ -193,17 +215,14 @@ void drawPlayer (player *p, unsigned char enableHitbox) {
     // float spriteW = al_get_bitmap_width(p->sprite);
     // float spriteH = al_get_bitmap_height(p->sprite);
     ALLEGRO_COLOR cor;
+    ALLEGRO_COLOR vermelho = al_map_rgb(255,0,0);
 
     if (p->character_id == 0)
         cor = al_map_rgb (0,255,0);
     else cor = al_map_rgb (0,0,255);
     if (enableHitbox) {
-        if (p->isCrouch && p->onGround) {
-            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->crouchHeight, cor, 1);
-        }
-        else {
-            al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->height, cor, 1);
-        }
+        al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->height, cor, 1);
+        al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width/2, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width/2, p->bodyHitbox->y + p->bodyHitbox->height, vermelho, 1);
         if (p->facing == 0)
             al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width - 5, p->bodyHitbox->y + 20, p->bodyHitbox->x + p->bodyHitbox->width - 1, p->bodyHitbox->y + 30, cor, 1);
         else
@@ -254,18 +273,28 @@ int main () {
 
     while (1) {
         al_wait_for_event(queue, &event);
+
+    // printf("--%d--\n", checkWallCollision(p2));
+    // printf("p1_x1 == %3d; p2_x1 == %d\n",p1->bodyHitbox->x, p2->bodyHitbox->x);
+    // printf("p1_x2 == %3d; p2_x2 == %d\n",p1->bodyHitbox->x + p1->bodyHitbox->width, p2->bodyHitbox->x + p2->bodyHitbox->width);
+    // printf("p1_y1 == %3d; p2_y1 == %d\n",p1->bodyHitbox->y, p2->bodyHitbox->y);
+    // printf("p1_y2 == %3d; p2_y2 == %d\n",p1->bodyHitbox->y + p2->bodyHitbox->height, p2->bodyHitbox->y + p2->bodyHitbox->height);
+
+    // printf("p1_y2 > p2_y1 == %d\n",p1->bodyHitbox->y + p1->bodyHitbox->height > p2->bodyHitbox->y);
+    // printf("p1_y1 < p2_y2 == %d\n",p1->bodyHitbox->y < p2->bodyHitbox->y + p2->bodyHitbox->height);
+    // printf("&& -> %d\n\n",(p1->bodyHitbox->y + p1->bodyHitbox->height > p2->bodyHitbox->y) && (p1->bodyHitbox->y < p2->bodyHitbox->y + p2->bodyHitbox->height));
         
         if (event.type == ALLEGRO_EVENT_TIMER) {
             al_clear_to_color(al_map_rgb(10,10,20));
 
             updateGravity(p1);
             updateGravity(p2);
-            
+
+            updateJump(p1, p2);
             updatePlayer(p1, p2);
-
             updateFacing(p1, p2);
+            separatePlayers(p1, p2);
 
-            
             updateLifeBar(p1, p2);
             
             updateAtkCooldown(p1);

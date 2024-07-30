@@ -20,10 +20,12 @@
 #define INIT_X2_POS 500
 
 #define GRAVITY 4
+// #define GRAVITY 1
 
 typedef struct {
-    unsigned short playersDistance;
     signed short screenPosition;
+    unsigned short playersDistance;
+    unsigned short playersIntersection; // representa o tamanho no eixo X da intersecção entre os player
 } gameStatus;
 
 gameStatus *gameStatusCreate ();
@@ -32,6 +34,8 @@ void updateLifeBar (player *p1, player *p2);
 unsigned char checkWallCollision (player *element);
 unsigned char checkPlayerCollision (player *p1, player *p2);
 void updateFacing (player *p1, player *p2);
+void separatePlayers (player *p1, player *p2);
+void updateJump (player *p1, player *p2);
 void gameStatusDestroy (gameStatus *gameStatus);
 
 #endif

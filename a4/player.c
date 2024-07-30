@@ -17,6 +17,7 @@ player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned sho
     ret_player->vy = 0;
     ret_player->onGround = 1;
     ret_player->isCrouch = 0;
+    ret_player->airStun = 0;
     ret_player->getUp = 0;
     ret_player->roundWin = 0;
     ret_player->isDamaged = 0;
@@ -52,6 +53,7 @@ void playerAction (player *p1, player *p2, unsigned char action) {
         // // // //
         // player 1
         case 0: // cima (ativado apenas se o player estiver onGround)
+            // tratamento de movimentos laterais
             if (p1->onGround) {
                 p1->onGround = 0;
                 p1->vy = -JUMP_VEL;
@@ -61,11 +63,11 @@ void playerAction (player *p1, player *p2, unsigned char action) {
         case 1: // esquerda
             p1->vx = -MOVE_STEP;
             if (checkWallCollision(p1))
-                p1->bodyHitbox->x = 1;
+                p1->bodyHitbox->x = 0;
             else if (checkPlayerCollision(p1, p2)) {
                 if (checkWallCollision(p2)) {
-                    p2->bodyHitbox->x = 1;
-                    p1->bodyHitbox->x = p2->bodyHitbox->x + p2->bodyHitbox->width + 5;
+                    p2->bodyHitbox->x = 0;
+                    p1->bodyHitbox->x = (p1->bodyHitbox->width) + 5;
                 }
                 else {
                     p2->vx = p1->vx + 7;
@@ -76,16 +78,18 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             else {
                 p1->bodyHitbox->x += p1->vx;
             }
+            
             p1->vx = 0;
             break;
             
         case 2: // baixo
             if (p1->onGround)
                 if ((p1->isCrouch == 1)){
-                    if (p1->bodyHitbox->y < (Y_GROUND - p1->bodyHitbox->crouchHeight))
-                        p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->crouchHeight;
+                    p1->bodyHitbox->height = P_CROUCH_HEIGHT;
+                    p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
                 }
                 else {
+                    p1->bodyHitbox->height = P_HEIGHT;
                     p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
                     p1->getUp = 0;
                 }
@@ -98,7 +102,7 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             else if (checkPlayerCollision(p1, p2)) {
                 if (checkWallCollision(p2)) {
                     p2->bodyHitbox->x = X_SCREEN - p2->bodyHitbox->width;
-                    p1->bodyHitbox->x = p2->bodyHitbox->x - p2->bodyHitbox->width - 5;
+                    p1->bodyHitbox->x = X_SCREEN - (p1->bodyHitbox->width * 2) - 5;
                 }
                 else {
                     p2->vx = p1->vx - 7;
@@ -110,6 +114,7 @@ void playerAction (player *p1, player *p2, unsigned char action) {
                 p1->bodyHitbox->x += p1->vx;
             }
             p1->vx = 0;
+            p2->vx = 0;
             break;
             
         case 4: // light punch
@@ -140,11 +145,11 @@ void playerAction (player *p1, player *p2, unsigned char action) {
         case 9: // esquerda
             p2->vx = -MOVE_STEP;
             if (checkWallCollision(p2))
-                p2->bodyHitbox->x = 1;
+                p2->bodyHitbox->x = 0;
             else if (checkPlayerCollision(p2, p1)) {
                 if (checkWallCollision(p1)) {
-                    p1->bodyHitbox->x = 1;
-                    p2->bodyHitbox->x = p1->bodyHitbox->x + p1->bodyHitbox->width + 5;
+                    p1->bodyHitbox->x = 0;
+                    p2->bodyHitbox->x = p2->bodyHitbox->width + 5;
                 }
                 else {
                     p1->vx = p2->vx + 7;
@@ -162,10 +167,11 @@ void playerAction (player *p1, player *p2, unsigned char action) {
         case 10: // baixo
             if (p2->onGround)
                 if ((p2->isCrouch == 1)){
-                    if (p2->bodyHitbox->y < (Y_GROUND - p2->bodyHitbox->crouchHeight))
-                        p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->crouchHeight;
+                    p2->bodyHitbox->height = P_CROUCH_HEIGHT;
+                    p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
                 }
                 else {
+                    p2->bodyHitbox->height = P_HEIGHT;
                     p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
                     p2->getUp = 0;
                 }
@@ -178,7 +184,7 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             else if (checkPlayerCollision(p2, p1)) {
                 if (checkWallCollision(p1)) {
                     p1->bodyHitbox->x = X_SCREEN - p1->bodyHitbox->width;
-                    p2->bodyHitbox->x = p1->bodyHitbox->x - p1->bodyHitbox->width - 5;
+                    p2->bodyHitbox->x = X_SCREEN - (p2->bodyHitbox->width * 2) - 5;
                 }
                 else {
                     p1->vx = p2->vx - 7;

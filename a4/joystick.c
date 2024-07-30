@@ -17,6 +17,7 @@ joystick *joystickCreate() {
     ret_jst->light_kick = 0;
     ret_jst->hard_kick = 0;
 
+    ret_jst->pressedUp = 0;
     ret_jst->pressedLP = 0;
     ret_jst->pressedHP = 0;
     ret_jst->pressedLK = 0;

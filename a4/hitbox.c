@@ -12,7 +12,6 @@ hitbox* hitboxCreate(unsigned short init_x, unsigned short init_y, unsigned shor
     ret_hb->y = init_y;
     ret_hb->width = width;
     ret_hb->height = height;
-    ret_hb->crouchHeight = height / 2;
 
     return ret_hb;
 }
