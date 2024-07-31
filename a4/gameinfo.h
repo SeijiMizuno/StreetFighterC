@@ -31,10 +31,14 @@ typedef struct {
 gameStatus *gameStatusCreate ();
 void updateGravity (player *element);
 void updateLifeBar (player *p1, player *p2);
+void updateAtkCooldown (player *element);
+unsigned char checkAtkHit (player *p1, player *p2);
 unsigned char checkWallCollision (player *element);
 unsigned char checkPlayerCollision (player *p1, player *p2);
 void updateFacing (player *p1, player *p2);
 void separatePlayers (player *p1, player *p2);
+void updateAtkHitbox (player *p1, player *p2);
+void updatePlayerHitbox (player *p1, player *p2);
 void updateJump (player *p1, player *p2);
 void gameStatusDestroy (gameStatus *gameStatus);
 

@@ -25,6 +25,7 @@ void updateGravity (player *element) {
     element->vy += GRAVITY;
 
     if (element->bodyHitbox->y + element->bodyHitbox->height >= Y_GROUND) {
+        element->bodyHitbox->height = P_HEIGHT;
         element->bodyHitbox->y = Y_GROUND - element->bodyHitbox->height;
         element->vy = 0;
         element->onGround = 1;
@@ -63,6 +64,25 @@ void updateLifeBar (player *p1, player *p2) {
     al_draw_rounded_rectangle(X_P2_LIFEBAR, Y_LIFEBAR, X_P2_LIFEBAR + LIFEBAR_W, Y_LIFEBAR + LIFEBAR_H, 3, 3, al_map_rgb(255,255,255), 2.5);
 }
 
+void updateAtkCooldown (player *element) {
+    if (element->atkCooldown - 1 >= 0)
+        element->atkCooldown--;
+    else
+        element->atkCooldown = 0;
+}
+
+unsigned char checkAtkHit (player *p1, player *p2) {
+    unsigned char p1_x1;
+    unsigned char p1_x2;
+    unsigned char p1_y1;
+    unsigned char p1_y2;
+
+    unsigned char p2_x1;
+    unsigned char p2_x2;
+    unsigned char p2_y1;
+    unsigned char p2_y2;
+    // if (p1->atkHitbox->x + )
+}
 
 unsigned char checkWallCollision (player *element) {
 // void checkWallColision (player *p1, player *p2) {
@@ -75,7 +95,6 @@ unsigned char checkWallCollision (player *element) {
 }
 
 unsigned char checkPlayerCollision (player *p1, player *p2) {
-
     // checando se os players estão se tocando na dimensão y
     if (((p1->bodyHitbox->y + p1->bodyHitbox->height > p2->bodyHitbox->y) &&
         (p1->bodyHitbox->y < p2->bodyHitbox->y + p2->bodyHitbox->height)) ||
@@ -84,8 +103,9 @@ unsigned char checkPlayerCollision (player *p1, player *p2) {
 
         // checando se os players estão se tocando na dimensão x
         if (p1->facing == 0) {  // player1 olhando para a direita (ao mesmo tempo que p2->facing == 1)
-            if ((p1->bodyHitbox->x + p1->bodyHitbox->width + p1->vx) > (p2->bodyHitbox->x))
+            if ((p1->bodyHitbox->x + p1->bodyHitbox->width + p1->vx) > (p2->bodyHitbox->x)){
                 return 1;
+            }
         }   
         else {
             if ((p2->bodyHitbox->x + p2->bodyHitbox->width - p1->vx) > (p1->bodyHitbox->x))
@@ -112,8 +132,7 @@ void updateFacing (player *p1, player *p2) {
 
 void separatePlayers (player *p1, player *p2) {
     if (checkPlayerCollision(p1,p2)){
-        if (!checkWallCollision(p1) && !checkWallCollision(p2)) {
-            printf("AAAAAAAA\n");
+        if (!checkWallCollision(p1) && !checkWallCollision(p2)) {   
             if ((p1->bodyHitbox->x + p1->bodyHitbox->width / 2) < (p2->bodyHitbox->x + p2->bodyHitbox->width / 2)) {
                 p1->vx = -MOVE_STEP;
                 p2->vx = MOVE_STEP;
@@ -121,25 +140,113 @@ void separatePlayers (player *p1, player *p2) {
             else if ((p1->bodyHitbox->x + p1->bodyHitbox->width / 2) >= (p2->bodyHitbox->x + p2->bodyHitbox->width / 2)) {
                 p1->vx = MOVE_STEP;
                 p2->vx = -MOVE_STEP;
+            }   
+        }
+        else if (checkWallCollision(p1) && checkWallCollision(p2)) {
+            if (!p1->onGround){
+                if (p1->facing == 0) {
+                    if (p1->bodyHitbox->x < X_SCREEN / 2) {
+                        p2->vx = 0;
+                        p1->vx = -MOVE_STEP*2;
+                    }
+                    else {
+                        p2->vx = -MOVE_STEP*2;
+                        p1->vx = 0;
+                    }
+                }
+                else  {
+                    p2->vx = 0;
+                    p1->vx = MOVE_STEP*2;
+                }
+            }
+            else if (!p2->onGround) {
+                if (p2->facing == 0) {
+                    if (p2->bodyHitbox->x < X_SCREEN / 2) {
+                        p1->vx = 0;
+                        p2->vx = -MOVE_STEP*2;
+                    }
+                    else {
+                        p1->vx = -MOVE_STEP*2;
+                        p2->vx = 0;
+                    }
+                }
+                else {
+                    p1->vx = 0;
+                    p2->vx = MOVE_STEP*2;
+                }
             }
         }
         else if (checkWallCollision(p1)) {
             p1->vx = 0;
-            if (p1->facing == 0) 
+            if (p1->facing == 0 && (p1->bodyHitbox->x < X_SCREEN / 2)) 
                 p2->vx = MOVE_STEP*2;
             else
                 p2->vx = -MOVE_STEP*2;
         }
         else if (checkWallCollision(p2)) {
             p2->vx = 0;
-            if (p2->facing == 0)
+            if (p2->facing == 0 && (p2->bodyHitbox->x < X_SCREEN / 2))
                 p1->vx = MOVE_STEP*2;
             else
                 p1->vx = -MOVE_STEP*2;
         }
-        p1->bodyHitbox->x += p1->vx;
-        p2->bodyHitbox->x += p2->vx;
+        
+        if (p1->bodyHitbox->x + p1->vx < 0)
+            p1->bodyHitbox->x = 0;
+        else if(p1->bodyHitbox->x + p1->vx > X_SCREEN)
+            p1->bodyHitbox->x = X_SCREEN - p1->bodyHitbox->width;
+        else
+            p1->bodyHitbox->x += p1->vx;
+
+        if (p2->bodyHitbox->x + p2->vx < 0)
+            p2->bodyHitbox->x = 0;
+        else if(p2->bodyHitbox->x + p2->vx > X_SCREEN)
+            p2->bodyHitbox->x = X_SCREEN - p2->bodyHitbox->width;
+        else
+            p2->bodyHitbox->x += p2->vx;
     }
+    p1->vx = 0;
+    p2->vx = 0;
+}
+
+void updateAtkHitbox (player *p1, player *p2) { // para simplificar os textos
+    if (p1->atkHitboxTick != 0)
+        p1->atkHitboxTick--;
+    if (p2->atkHitboxTick != 0)
+        p2->atkHitboxTick--;
+
+    if (p1->atkHitboxTick == 0) {
+        p1->atkHitbox->x = 0;
+        p1->atkHitbox->width = 0;
+        p1->atkHitbox->y = 0;
+        p1->atkHitbox->height = 0;
+    }
+    else {
+        if (p1->facing == 0)
+            p1->atkHitbox->x = p1->bodyHitbox->x + p1->bodyHitbox->width;
+        else
+            p1->atkHitbox->x = p1->bodyHitbox->x;
+
+        if (p1->onGround)
+            if (p1->atkHitbox->height == PUNCH_H)
+                p1->atkHitbox->y = p1->bodyHitbox->y;
+            else
+                p1->atkHitbox->y = p1->bodyHitbox->y + P_CROUCH_HEIGHT;
+        else
+            p1->atkHitbox->y = p1->bodyHitbox->y + p1->bodyHitbox->height / 2;
+    }
+}
+
+void updatePlayerHitbox (player *p1, player *p2) {
+    if (!p1->onGround || p1->isCrouch)
+        p1->bodyHitbox->height = P_CROUCH_HEIGHT; 
+    else
+        p1->bodyHitbox->height = P_HEIGHT;
+
+    if (!p2->onGround || p2->isCrouch)
+        p2->bodyHitbox->height = P_CROUCH_HEIGHT; 
+    else
+        p2->bodyHitbox->height = P_HEIGHT;
 }
 
 void updateJump (player *p1, player *p2) {
@@ -147,42 +254,61 @@ void updateJump (player *p1, player *p2) {
     if (p1->airStun) {
         if (p1->airStun < 0) {
             if (!checkWallCollision(p1))
-                p1->bodyHitbox->x -= MOVE_STEP;
-            else
+                p1->vx = -MOVE_STEP;
+            else if (p1->bodyHitbox->x < (X_SCREEN / 2)) {    // checa se a colisão foi com a parede da direita ou da esquerda
+                p1->vx = 0;
                 p1->bodyHitbox->x = 0;
+            } else
+                p1->vx = -MOVE_STEP;
             p1->airStun++;
         }
         else {  // logicamente, airStun > 0
             if (!checkWallCollision(p1))
-                p1->bodyHitbox->x += MOVE_STEP;
-            else
+                p1->vx = MOVE_STEP;
+            else if (p1->bodyHitbox->x > X_SCREEN / 2) {    // checa se a colisão foi com a parede da direita ou da esquerda
+                p1->vx = 0;
                 p1->bodyHitbox->x = X_SCREEN - p1->bodyHitbox->width;
+            }
+            else
+                p1->vx = MOVE_STEP;
             p1->airStun--;
         }
     }
-
     // atualiza posição x do player no ar
     if (p2->airStun) {
         if (p2->airStun < 0) {
             if (!checkWallCollision(p2))
-                p2->bodyHitbox->x -= MOVE_STEP;
-            else
+                p2->vx = -MOVE_STEP;
+            else if (p2->bodyHitbox->x < (X_SCREEN / 2)) // checa se a colisão foi com a parede da direita ou da esquerda
                 p2->bodyHitbox->x = 0;
+            else
+                p2->vx = -MOVE_STEP;
             p2->airStun++;
         }
         else {  // logicamente, airStun > 0
             if (!checkWallCollision(p2))
-                p2->bodyHitbox->x += MOVE_STEP;
-            else
+                p2->vx = MOVE_STEP;
+            else if (p2->bodyHitbox->x > X_SCREEN / 2) {    // checa se a colisão foi com a parede da direita ou da esquerda
+                p2->vx = 0;
                 p2->bodyHitbox->x = X_SCREEN - p2->bodyHitbox->width;
+            }
+            else
+                p2->vx = MOVE_STEP;
             p2->airStun--;
         }
     }
-    // if (p1->facing == 0) {
-    //     if ((p1->bodyHitbox->x + (p1->bodyHitbox->width / 2)) < 
-    //         (p2->bodyHitbox->x + (p2->bodyHitbox->width / 2)))
-    //         if (p1->airStun)
-    // }
+    
+    if (p1->bodyHitbox->x + p1->vx < 0)
+        p1->bodyHitbox->x = 0;
+    else
+        p1->bodyHitbox->x += p1->vx;
+
+    if (p2->bodyHitbox->x + p2->vx < 0)
+        p2->bodyHitbox->x = 0;
+    else
+        p2->bodyHitbox->x += p2->vx;
+    p1->vx = 0;
+    p2->vx = 0;
 }
 
 void gameStatusDestroy (gameStatus *gameStatus) {

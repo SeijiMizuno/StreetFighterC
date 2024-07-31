@@ -106,7 +106,6 @@ void processKeyboard (int keycode, player *p1, player *p2) {
                 joystickUp(p1->action);
                 if (p1->onGround)
                     toggleState(&p1->onGround);
-                printf("W\n");
             }
             toggleState(&p1->action->pressedUp);
             break;
@@ -161,9 +160,12 @@ void processKeyboard (int keycode, player *p1, player *p2) {
             break;
 
         case 84: // up arrow
-            joystickUp(p2->action);
-            if (p2->onGround)
-                toggleState(&p2->onGround);
+            if (p2->action->pressedUp == 0) {
+                joystickUp(p2->action);
+                if (p2->onGround)
+                    toggleState(&p2->onGround);
+            }
+            toggleState(&p2->action->pressedUp);
             break;
 
         case 85: // down arrow
@@ -223,10 +225,16 @@ void drawPlayer (player *p, unsigned char enableHitbox) {
     if (enableHitbox) {
         al_draw_rectangle(p->bodyHitbox->x, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + p->bodyHitbox->height, cor, 1);
         al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width/2, p->bodyHitbox->y, p->bodyHitbox->x + p->bodyHitbox->width/2, p->bodyHitbox->y + p->bodyHitbox->height, vermelho, 1);
-        if (p->facing == 0)
+        if (p->facing == 0) {
+            if (p->atkHitboxTick)
+                al_draw_rectangle(p->atkHitbox->x, p->atkHitbox->y, p->atkHitbox->x + p->atkHitbox->width, p->atkHitbox->y + p->atkHitbox->height, cor, 1);
             al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width - 5, p->bodyHitbox->y + 20, p->bodyHitbox->x + p->bodyHitbox->width - 1, p->bodyHitbox->y + 30, cor, 1);
-        else
+        }
+        else {
+            if (p->atkHitboxTick)
+                al_draw_rectangle(p->atkHitbox->x, p->atkHitbox->y, p->atkHitbox->x - p->atkHitbox->width, p->atkHitbox->y + p->atkHitbox->height, cor, 1);
             al_draw_rectangle(p->bodyHitbox->x + 1, p->bodyHitbox->y + 20, p->bodyHitbox->x + 5, p->bodyHitbox->y + 30, cor, 1);
+        }
     }
 
     // al_draw_rectangle(p->bodyHitbox->x + p->bodyHitbox->width, p->bodyHitbox->y + 30, p->bodyHitbox->x + p->bodyHitbox->width + L_PUNCH_W, p->bodyHitbox->y + 30 + PUNCH_H, al_map_rgb(255,0,0), 1);
@@ -274,17 +282,9 @@ int main () {
     while (1) {
         al_wait_for_event(queue, &event);
 
-    // printf("--%d--\n", checkWallCollision(p2));
-    // printf("p1_x1 == %3d; p2_x1 == %d\n",p1->bodyHitbox->x, p2->bodyHitbox->x);
-    // printf("p1_x2 == %3d; p2_x2 == %d\n",p1->bodyHitbox->x + p1->bodyHitbox->width, p2->bodyHitbox->x + p2->bodyHitbox->width);
-    // printf("p1_y1 == %3d; p2_y1 == %d\n",p1->bodyHitbox->y, p2->bodyHitbox->y);
-    // printf("p1_y2 == %3d; p2_y2 == %d\n",p1->bodyHitbox->y + p2->bodyHitbox->height, p2->bodyHitbox->y + p2->bodyHitbox->height);
-
-    // printf("p1_y2 > p2_y1 == %d\n",p1->bodyHitbox->y + p1->bodyHitbox->height > p2->bodyHitbox->y);
-    // printf("p1_y1 < p2_y2 == %d\n",p1->bodyHitbox->y < p2->bodyHitbox->y + p2->bodyHitbox->height);
-    // printf("&& -> %d\n\n",(p1->bodyHitbox->y + p1->bodyHitbox->height > p2->bodyHitbox->y) && (p1->bodyHitbox->y < p2->bodyHitbox->y + p2->bodyHitbox->height));
-        
         if (event.type == ALLEGRO_EVENT_TIMER) {
+            // printf("damage %d\n", p1->isDamaged);
+
             al_clear_to_color(al_map_rgb(10,10,20));
 
             updateGravity(p1);
@@ -294,6 +294,8 @@ int main () {
             updatePlayer(p1, p2);
             updateFacing(p1, p2);
             separatePlayers(p1, p2);
+            updatePlayerHitbox (p1, p2);
+            updateAtkHitbox(p1, p2);
 
             updateLifeBar(p1, p2);
             
@@ -304,8 +306,6 @@ int main () {
             drawPlayer(p1, 1);
             drawPlayer(p2, 1);
             al_flip_display();
-    // printf("%d p1 y + h\n%d p2 y\n\n", p1->bodyHitbox->y + p1->bodyHitbox->height, p2->bodyHitbox->y);
-
         }
         else if (event.type == ALLEGRO_EVENT_KEY_DOWN || event.type == ALLEGRO_EVENT_KEY_UP) {
             if (event.keyboard.keycode == ALLEGRO_KEY_ESCAPE)

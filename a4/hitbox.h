@@ -1,6 +1,8 @@
 #ifndef __HITBOX__
 #define __HITBOX__
 
+#define ATK_HITBOX_TICK 5
+
 typedef struct {
     unsigned short x;
     unsigned short y;
