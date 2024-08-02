@@ -17,9 +17,9 @@
 #define LIFE_DECAY_SPEED 10
 
 #define INIT_X1_POS 100
-#define INIT_X2_POS 500
+#define INIT_X2_POS X_SCREEN - P_WIDTH - 100
 
-#define GRAVITY 4
+#define GRAVITY 5
 // #define GRAVITY 1
 
 typedef struct {
@@ -32,13 +32,15 @@ gameStatus *gameStatusCreate ();
 void updateGravity (player *element);
 void updateLifeBar (player *p1, player *p2);
 void updateAtkCooldown (player *element);
+void updateComboCooldown (player *element);
 unsigned char checkAtkHit (player *p1, player *p2);
+unsigned char checkComboHit (player *p1, player *p2);
 unsigned char checkWallCollision (player *element);
 unsigned char checkPlayerCollision (player *p1, player *p2);
 void updateFacing (player *p1, player *p2);
 void separatePlayers (player *p1, player *p2);
+void updateComboHitbox (player *p1, player *p2);
 void updateAtkHitbox (player *p1, player *p2);
-void updatePlayerHitbox (player *p1, player *p2);
 void updateJump (player *p1, player *p2);
 void gameStatusDestroy (gameStatus *gameStatus);
 

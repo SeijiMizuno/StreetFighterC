@@ -10,6 +10,13 @@ player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned sho
     player *ret_player = (player*) malloc(sizeof(player));
     if (!ret_player)
         return NULL;
+
+    ret_player->combo = (int*) malloc(MAX_COMBO_KEY * sizeof(int));
+    if (!ret_player->combo)
+        return NULL;
+
+    for (int i = 0; i < MAX_COMBO_KEY; i++)
+        ret_player->combo[i] = 0;
     
     ret_player->character_id = 0;
     ret_player->hp = LIFEBAR_W;
@@ -18,20 +25,43 @@ player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned sho
     ret_player->onGround = 1;
     ret_player->isCrouch = 0;
     ret_player->airStun = 0;
-    ret_player->getUp = 0;
     ret_player->roundWin = 0;
     ret_player->isDamaged = 0;
     ret_player->atkHitboxTick = 0;
     ret_player->atkCooldown = 0;
+    ret_player->comboCooldown = 0;
     ret_player->isHuman = 1;
     ret_player->facing = 0;
+    ret_player->comboSuccess = 0;
+    ret_player->comboIndex = 0;
+    ret_player->comboTimeElapsed = 0;
+    ret_player->comboDamage = 0;
     ret_player->sprite = NULL;
     ret_player->action = joystickCreate();
     ret_player->bodyHitbox = hitboxCreate(init_x, init_y, widht, height);
     ret_player->atkHitbox = hitboxCreate(0,0,0,0);
+    ret_player->comboHitbox = hitboxCreate(0,0,0,0);
 
     return ret_player;
 }
+
+// sequencia de teclas necessárias quando facing == 0
+const int COMBO_SEQUENCES_0[MAX_COMBOS][MAX_COMBO_KEY] = {
+    {19, 4, 4, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> D -> D -> U
+    // {19, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> U
+    // {19, 4, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> D -> U
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
+};
+
+// sequencia de teclas necessárias quando facing == 1
+const int COMBO_SEQUENCES_1[MAX_COMBOS][MAX_COMBO_KEY] = {
+    {19, 1, 1, 1, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> A -> A -> A -> U
+    // {19, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> U
+    // {19, 4, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> D -> U
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
+};
 
 void toggleState (unsigned char *toBeToggled) {
     *toBeToggled = !(*toBeToggled);
@@ -44,11 +74,11 @@ void setAtkCooldown (player *player) {
 
 void setAtkHitbox (player *element) {
     // para simplificar os textos
-    unsigned short x1;
     unsigned short p_y1;
     unsigned short k_y1;
 
     if (element->atkHitboxTick == 0) {    
+        // decisão da posição y1 do ataque
         if (!element->onGround)
             p_y1 = element->bodyHitbox->y + (P_CROUCH_HEIGHT / 2);
         else
@@ -56,42 +86,90 @@ void setAtkHitbox (player *element) {
 
         if (!element->onGround)
             k_y1 = element->bodyHitbox->y + (P_CROUCH_HEIGHT / 2);
-        else
+        else if (!element->isCrouch)
             k_y1 = element->bodyHitbox->y + P_CROUCH_HEIGHT;
-
-        if (element->facing == 0)
-            x1 = element->bodyHitbox->x + element->bodyHitbox->width;   
         else
-            x1 = element->bodyHitbox->x;
+            k_y1 = element->bodyHitbox->y;
 
-        if (element->action->light_punch) {
-            element->atkHitbox->x = x1;
-            element->atkHitbox->width = L_PUNCH_W;
+        // decisão da posição x1 do ataque
+        if (element->facing == 0)
+            element->atkHitbox->x = element->bodyHitbox->x + element->bodyHitbox->width;   
+        else
+            element->atkHitbox->x = element->bodyHitbox->x;
+
+        // inicialização da hitbox de ataque
+        if (element->action->light_punch || element->action->hard_punch) {
             element->atkHitbox->y = p_y1;
             element->atkHitbox->height = PUNCH_H;
+            if (element->action->light_punch)
+                element->atkHitbox->width = L_PUNCH_W;
+            else
+                element->atkHitbox->width = H_PUNCH_W;
         }
-        else if (element->action->hard_punch) {
-            element->atkHitbox->x = x1;
-            element->atkHitbox->width = H_PUNCH_W;
-            element->atkHitbox->y = p_y1;
-            element->atkHitbox->height = PUNCH_H;
-        }
-        else if (element->action->light_kick) {
-            element->atkHitbox->x = x1;
-            element->atkHitbox->width = L_KICK_W;
-            element->atkHitbox->y = p_y1;
+        else if (element->action->light_kick || element->action->hard_kick) {
+            element->atkHitbox->y = k_y1;
             element->atkHitbox->height = KICK_H;
+            if (element->action->light_kick)
+                element->atkHitbox->width = L_KICK_W;
+            else
+                element->atkHitbox->width = H_KICK_W;
         }
-        else if (element->action->hard_kick) {
-            element->atkHitbox->x = x1;
-            element->atkHitbox->width = H_KICK_W;
-            element->atkHitbox->y = p_y1;
-            element->atkHitbox->height = KICK_H;
-        }
-        element->atkHitboxTick = 5;
+        element->atkHitboxTick = ATK_TICK;
     }
     else
         element->atkHitboxTick--;
+}
+
+void insertComboKey (player *p, int keycode) {
+    if (p->comboIndex < MAX_COMBO_KEY) {
+        p->combo[p->comboIndex] = keycode;
+        p->comboTimeElapsed = 0;
+        p->comboIndex++;
+
+        checkCombo(p, keycode);
+    }
+}
+
+void checkCombo (player *p, int keycode) {
+    for (int i = 0; i < MAX_COMBOS; i++)
+        for (int j = 0; j < MAX_COMBO_KEY; j++)
+            if (p->facing == 0) {
+                if (p->combo[j] == COMBO_SEQUENCES_0[i][j]) {
+                    if (COMBO_SEQUENCES_0[i][j + 1] == 0 && !p->comboCooldown) {
+                        p->comboSuccess = i + 1;
+                        return;
+                    }
+                    else
+                        continue;
+                }
+                else
+                    break;
+            }
+            else {
+                if (p->combo[j] == COMBO_SEQUENCES_1[i][j]) {
+                    if (COMBO_SEQUENCES_1[i][j + 1] == 0 && !p->comboCooldown) {
+                        p->comboSuccess = i + 1;
+                        return;
+                    }
+                    else
+                        continue;
+                }
+                else
+                    break;
+            }
+
+    p->comboSuccess = 0;
+}
+
+void updateCombo (player *p1, player *p2) {
+    if ((p1->comboTimeElapsed < COMBO_TIME_LIMIT ) && (p1->comboIndex < MAX_COMBO_KEY))
+        p1->comboTimeElapsed++;
+    else {
+        for (int i = 0; i < MAX_COMBO_KEY; i++)
+            p1->combo[i] = 0;
+        p1->comboIndex = 0;
+        p1->comboSuccess = 0;
+    }
 }
 
 void playerAction (player *p1, player *p2, unsigned char action) {
@@ -99,6 +177,12 @@ void playerAction (player *p1, player *p2, unsigned char action) {
         // // // //
         // player 1
         case 0: // cima (ativado apenas se o player estiver onGround e em pé)
+            if (p1->airStun == 0) {
+                if (p1->action->left)
+                    p1->airStun = -JUMP_STUN;
+                else if (p1->action->right)
+                    p1->airStun = JUMP_STUN;
+            }
             if (!p1->isCrouch) {
                 if (p1->onGround) {
                     p1->onGround = 0;
@@ -119,8 +203,13 @@ void playerAction (player *p1, player *p2, unsigned char action) {
                     }
                     else {
                         p2->vx = p1->vx + 7;
-                        p2->bodyHitbox->x += p2->vx;
-                        p1->bodyHitbox->x += p1->vx + 7;
+                        if (checkWallCollision(p2) && (p1->bodyHitbox->x < X_SCREEN/2)) {
+                            p2->bodyHitbox->x = 0;
+                            p1->bodyHitbox->x = (p1->bodyHitbox->width) + 5;
+                        } else {
+                            p2->bodyHitbox->x += p2->vx;
+                            p1->bodyHitbox->x += p1->vx + 7;
+                        }
                     }
                 }
                 else {
@@ -132,16 +221,14 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             break;
             
         case 2: // baixo
-            if (p1->onGround)
-                if ((p1->isCrouch == 1)){
-                    p1->bodyHitbox->height = P_CROUCH_HEIGHT;
-                    p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
-                }
-                else {
-                    p1->bodyHitbox->height = P_HEIGHT;
-                    p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
-                    p1->getUp = 0;
-                }
+            if ((p1->isCrouch == 1)){
+                p1->bodyHitbox->height = P_CROUCH_HEIGHT;
+                p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
+            }
+            else {
+                p1->bodyHitbox->height = P_HEIGHT;
+                p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
+            }
             break;
             
         case 3: // direita
@@ -170,27 +257,45 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             
         case 4: // light punch
             setAtkHitbox (p1);
-            p1->isDamaged += L_PUNCH_DAM;
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown (p1);
+                p2->isDamaged += L_PUNCH_DAM;
+            }
             break;
 
         case 5: // hard punch
             setAtkHitbox (p1);
-            p1->isDamaged += H_PUNCH_DAM;
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown (p1);
+                p2->isDamaged += H_PUNCH_DAM;
+            }
             break;
 
         case 6: // light kick
             setAtkHitbox (p1);
-            p1->isDamaged += L_KICK_DAM;
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown (p1);
+                p2->isDamaged += L_KICK_DAM;
+            }
             break;
 
         case 7: // hard kick
             setAtkHitbox (p1);
-            p1->isDamaged += H_KICK_DAM;
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown (p1);
+                p2->isDamaged += H_KICK_DAM;
+            }
             break;
 
         // // // //
         // player 2
         case 8: // cima (ativado apenas se o player estiver onGround e em pé)
+            if (p2->airStun == 0) {
+                if (p2->action->left)
+                    p2->airStun = -JUMP_STUN;
+                else if (p2->action->right)
+                    p2->airStun = JUMP_STUN;
+            }
             if (!p2->isCrouch) {
                 if (p2->onGround) {
                     p2->onGround = 0;
@@ -211,8 +316,14 @@ void playerAction (player *p1, player *p2, unsigned char action) {
                     }
                     else {
                         p1->vx = p2->vx + 7;
-                        p1->bodyHitbox->x += p1->vx;
-                        p2->bodyHitbox->x += p2->vx + 7;
+                        if (checkWallCollision(p1) && (p2->bodyHitbox->x < X_SCREEN/2)) {
+                            p1->bodyHitbox->x = 0;
+                            p2->bodyHitbox->x = p2->bodyHitbox->width + 5;
+                        }
+                        else {
+                            p1->bodyHitbox->x += p1->vx;
+                            p2->bodyHitbox->x += p2->vx + 7;
+                        }
                     }
                 }
                 else {
@@ -225,16 +336,14 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             
             
         case 10: // baixo
-            if (p2->onGround)
-                if ((p2->isCrouch == 1)){
-                    p2->bodyHitbox->height = P_CROUCH_HEIGHT;
-                    p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
-                }
-                else {
-                    p2->bodyHitbox->height = P_HEIGHT;
-                    p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
-                    p2->getUp = 0;
-                }
+            if ((p2->isCrouch == 1)){
+                p2->bodyHitbox->height = P_CROUCH_HEIGHT;
+                p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
+            }
+            else {
+                p2->bodyHitbox->height = P_HEIGHT;
+                p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
+            }
             break;
             
         case 11: // direita
@@ -261,31 +370,47 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             break;
             
         case 12: // light punch
-            p2->isDamaged += L_PUNCH_DAM;
+            setAtkHitbox (p2);
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown(p2);
+                p1->isDamaged += L_PUNCH_DAM;
+            }
             break;
 
         case 13: // hard punch
-            p2->isDamaged += H_PUNCH_DAM;
+            setAtkHitbox (p2);
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown(p2);
+                p1->isDamaged += H_PUNCH_DAM;
+            }
             break;
 
         case 14: // light kick
-            p2->isDamaged += L_KICK_DAM;
+            setAtkHitbox (p2);
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown(p2);
+                p1->isDamaged += L_KICK_DAM;
+            }
             break;
 
         case 15: // hard kick
-            p2->isDamaged += H_KICK_DAM;
+            setAtkHitbox (p2);
+            if(checkAtkHit(p1, p2)) {
+                setAtkCooldown(p2);
+                p1->isDamaged += H_KICK_DAM;
+            }
             break;
     }
     
-    // setAtkHitbox (p1);
-    // setAtkHitbox (p2);
-    checkAtkHit (p1, p2);
+    // checkAtkHit (p1, p2);
 }
 
 void playerDestroy (player *element) {
     if (element) {
         joystickDestroy (element->action);
         hitboxDestroy (element->bodyHitbox);
+        hitboxDestroy (element->atkHitbox);
+        free (element->combo);
         if (element->sprite)
             al_destroy_bitmap(element->sprite);
     }

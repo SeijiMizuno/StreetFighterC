@@ -3,14 +3,6 @@ Template:
     Atual: 
     Esperado: 
 
- - Adicionar e tratar hitbox dos ataques
-    Atual: o jogador 1 recebe dano independente do ataque
-    Esperado: funcionamento normal dos ataques
-
-
- - Adicionar background dinâmico
-    Atual: fundo preto
-    Esperado: imagem que se move quando players se movimentam nas bordas
 
  - Adicionar BOT
     Atual: sem bot

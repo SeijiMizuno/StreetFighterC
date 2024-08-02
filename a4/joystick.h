@@ -10,11 +10,6 @@ typedef struct {
     unsigned char hard_punch;
     unsigned char light_kick;
     unsigned char hard_kick;
-    unsigned char pressedUp;
-    unsigned char pressedLP;
-    unsigned char pressedHP;
-    unsigned char pressedLK;
-    unsigned char pressedHK;
 } joystick;
 
 joystick* joystickCreate();
