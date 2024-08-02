@@ -2,6 +2,10 @@
 #define __GAMEINFO__
 
 #include "player.h"
+#include <allegro5/allegro5.h>
+#include <allegro5/allegro_image.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 
 #define X_SCREEN 800
 #define Y_SCREEN 600
@@ -26,9 +30,13 @@ typedef struct {
     signed short screenPosition;
     unsigned short playersDistance;
     unsigned short playersIntersection; // representa o tamanho no eixo X da intersecção entre os player
+    unsigned short gameScene;           // indica em qual cena o jogo está atualmente (0 = menu inicial, 1 = seleção de personagens, ...)
+    ALLEGRO_BITMAP *BGimg;
+    ALLEGRO_FONT *font;
 } gameStatus;
 
 gameStatus *gameStatusCreate ();
+void drawBG(gameStatus *gameStatus);
 void updateGravity (player *element);
 void updateLifeBar (player *p1, player *p2);
 void updateAtkCooldown (player *element);

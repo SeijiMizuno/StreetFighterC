@@ -4,9 +4,6 @@ Template:
     Esperado: 
 
 
- - Adicionar BOT
-    Atual: sem bot
-    Esperado: bot "razoável"
 
  - Adicionar mais personagens
     Atual: apenas um personagem genérico

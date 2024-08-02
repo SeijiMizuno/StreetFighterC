@@ -18,7 +18,7 @@ player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned sho
     for (int i = 0; i < MAX_COMBO_KEY; i++)
         ret_player->combo[i] = 0;
     
-    ret_player->character_id = 0;
+    ret_player->character_id = 3;
     ret_player->hp = LIFEBAR_W;
     ret_player->vx = 0;
     ret_player->vy = 0;
@@ -46,21 +46,92 @@ player *playerCreate (unsigned short init_x, unsigned short init_y, unsigned sho
 }
 
 // sequencia de teclas necessárias quando facing == 0
+// MAX_CARACTERS*2 pois são dois jogadores
 const int COMBO_SEQUENCES_0[MAX_COMBOS][MAX_COMBO_KEY] = {
-    {19, 4, 4, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> D -> D -> U
-    // {19, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> U
-    // {19, 4, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> D -> U
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
+    //ryu combo
+    // down -> right -> right -> right -> LP -> Down -> Left -> HP
+    // p1
+    {19, 4, 4, 4, 21, 19, 1, 9, 0, 0, 0, 0, 0, 0, 0},   
+
+    // chun li combo
+    // left -> right -> left -> right -> left -> right -> LK -> HK
+    // p1
+    {1, 4, 1, 4, 1, 4, 10, 11, 0, 0, 0, 0, 0, 0, 0},   
+
+    // blanka combo
+    // 
+    // p1
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   
+
+    // zangief combo
+    // 
+    // p1
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+
+
+    //ryu combo
+    // down -> right -> right -> right -> LP -> Down -> Left -> HP
+    // p2
+    {85, 83, 83, 83, 42, 85, 82, 43, 0, 0, 0, 0, 0, 0, 0},   
+
+    // chun li combo
+    // left -> right -> left -> right -> left -> right -> LK -> HK
+    // p2
+    {82, 83, 82, 83, 82, 82, 39, 40, 0, 0, 0, 0, 0, 0, 0},   
+
+    // blanka combo
+    // 
+    // p2
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},   
+
+    // zangief combo
+    // 
+    // p2
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 // sequencia de teclas necessárias quando facing == 1
 const int COMBO_SEQUENCES_1[MAX_COMBOS][MAX_COMBO_KEY] = {
-    {19, 1, 1, 1, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> A -> A -> A -> U
-    // {19, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> U
-    // {19, 4, 4, 21, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // S -> D -> D -> U
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
-    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},    // 
+    // ryu combo
+    // down -> left -> left -> left -> LP -> down -> right -> HP
+    // p1
+    {19, 1, 1, 1, 21, 19, 4, 9, 0, 0, 0, 0, 0, 0, 0},   
+    
+    // chun li combo
+    // right -> left -> right -> left -> right -> left -> LK -> HK
+    // p1
+    {4, 1, 4, 1, 4, 1, 10, 11, 0, 0, 0, 0, 0, 0, 0},   
+    
+    // blanka combo
+    // 
+    // p1
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    
+    // zangief combo
+    // 
+    // p1
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+
+
+    // ryu combo
+    // down -> left -> left -> left -> LP -> down -> right -> HP
+    // p2
+    {85, 82, 82, 82, 42, 85, 83, 43, 0, 0, 0, 0, 0, 0, 0},   
+    
+    // chun li combo
+    // right -> left -> right -> left -> right -> left -> LK -> HK
+    // p2
+    {83, 82, 83, 82, 83, 82, 39, 40, 0, 0, 0, 0, 0, 0, 0},   
+    
+    // blanka combo
+    // 
+    // p2
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    
+    // zangief combo
+    // 
+    // p2
+    {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 void toggleState (unsigned char *toBeToggled) {
@@ -79,17 +150,17 @@ void setAtkHitbox (player *element) {
 
     if (element->atkHitboxTick == 0) {    
         // decisão da posição y1 do ataque
-        if (!element->onGround)
+        if (!element->onGround) {
             p_y1 = element->bodyHitbox->y + (P_CROUCH_HEIGHT / 2);
-        else
-            p_y1 = element->bodyHitbox->y;
-
-        if (!element->onGround)
             k_y1 = element->bodyHitbox->y + (P_CROUCH_HEIGHT / 2);
-        else if (!element->isCrouch)
-            k_y1 = element->bodyHitbox->y + P_CROUCH_HEIGHT;
-        else
-            k_y1 = element->bodyHitbox->y;
+        }
+        else {
+            p_y1 = element->bodyHitbox->y;
+            if (element->isCrouch)
+                k_y1 = element->bodyHitbox->y;
+            else
+                k_y1 = element->bodyHitbox->y + P_CROUCH_HEIGHT;
+        }
 
         // decisão da posição x1 do ataque
         if (element->facing == 0)
@@ -131,32 +202,27 @@ void insertComboKey (player *p, int keycode) {
 }
 
 void checkCombo (player *p, int keycode) {
-    for (int i = 0; i < MAX_COMBOS; i++)
-        for (int j = 0; j < MAX_COMBO_KEY; j++)
-            if (p->facing == 0) {
-                if (p->combo[j] == COMBO_SEQUENCES_0[i][j]) {
-                    if (COMBO_SEQUENCES_0[i][j + 1] == 0 && !p->comboCooldown) {
-                        p->comboSuccess = i + 1;
-                        return;
-                    }
-                    else
-                        continue;
+    for (int i = 0; i < MAX_COMBO_KEY; i++)
+        if (p->facing == 0) {
+            if (p->combo[i] == COMBO_SEQUENCES_0[p->character_id][i]) {
+                if (COMBO_SEQUENCES_0[p->character_id][i + 1] == 0 && !p->comboCooldown) {
+                    p->comboSuccess = p->character_id + 1;
+                    return;
                 }
-                else
-                    break;
             }
-            else {
-                if (p->combo[j] == COMBO_SEQUENCES_1[i][j]) {
-                    if (COMBO_SEQUENCES_1[i][j + 1] == 0 && !p->comboCooldown) {
-                        p->comboSuccess = i + 1;
-                        return;
-                    }
-                    else
-                        continue;
+            else
+                break;
+        }
+        else {
+            if (p->combo[i] == COMBO_SEQUENCES_1[p->character_id][i]) {
+                if (COMBO_SEQUENCES_1[p->character_id][i + 1] == 0 && !p->comboCooldown) {
+                    p->comboSuccess = p->character_id + 1;
+                    return;
                 }
-                else
-                    break;
             }
+            else
+                break;
+        }
 
     p->comboSuccess = 0;
 }
@@ -169,6 +235,15 @@ void updateCombo (player *p1, player *p2) {
             p1->combo[i] = 0;
         p1->comboIndex = 0;
         p1->comboSuccess = 0;
+    }
+
+    if ((p2->comboTimeElapsed < COMBO_TIME_LIMIT ) && (p2->comboIndex < MAX_COMBO_KEY))
+        p2->comboTimeElapsed++;
+    else {
+        for (int i = 0; i < MAX_COMBO_KEY; i++)
+            p2->combo[i] = 0;
+        p2->comboIndex = 0;
+        p2->comboSuccess = 0;
     }
 }
 
@@ -221,14 +296,12 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             break;
             
         case 2: // baixo
-            if ((p1->isCrouch == 1)){
+            if (p1->isCrouch == 1)
                 p1->bodyHitbox->height = P_CROUCH_HEIGHT;
-                p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
-            }
-            else {
+            else
                 p1->bodyHitbox->height = P_HEIGHT;
-                p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
-            }
+            
+            p1->bodyHitbox->y = Y_GROUND - p1->bodyHitbox->height;
             break;
             
         case 3: // direita
@@ -336,14 +409,12 @@ void playerAction (player *p1, player *p2, unsigned char action) {
             
             
         case 10: // baixo
-            if ((p2->isCrouch == 1)){
+            if (p2->isCrouch == 1)
                 p2->bodyHitbox->height = P_CROUCH_HEIGHT;
-                p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
-            }
-            else {
+            else
                 p2->bodyHitbox->height = P_HEIGHT;
-                p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
-            }
+
+            p2->bodyHitbox->y = Y_GROUND - p2->bodyHitbox->height;
             break;
             
         case 11: // direita

@@ -1,6 +1,9 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <allegro5/allegro5.h>
 #include <allegro5/allegro_primitives.h>
+#include <allegro5/allegro_font.h>
+#include <allegro5/allegro_ttf.h>
 
 #include "gameinfo.h"
 #include "player.h"
@@ -15,9 +18,23 @@ gameStatus *gameStatusCreate () {
     ret_gameStatus->screenPosition = 0;
     ret_gameStatus->playersDistance = INIT_X2_POS - (INIT_X1_POS + P_WIDTH);
     ret_gameStatus->playersIntersection = 0;
+    ret_gameStatus->BGimg = NULL;
+    ret_gameStatus->font = NULL;
 
     return ret_gameStatus;
 }
+
+void drawBG(gameStatus *gameStatus) {
+    if (gameStatus->BGimg == NULL)
+        return;
+
+    float spriteW = al_get_bitmap_width(gameStatus->BGimg);
+    float spriteH = al_get_bitmap_height(gameStatus->BGimg);
+    
+    al_draw_scaled_bitmap(gameStatus->BGimg, 0, 0, spriteW, spriteH, 0, 0, X_SCREEN, Y_SCREEN, 0);
+}
+
+void setBGimage();
 
 void updateGravity (player *element) {
     // atualiza posição y do player
@@ -89,7 +106,8 @@ unsigned char checkAtkHit (player *p1, player *p2) {
     (p1->bodyHitbox->y < p2->atkHitbox->y + p2->atkHitbox->height))))
     {
         if (p1->facing == 0 && p2->facing == 1) {
-            if ((p1->atkHitbox->x + p1->atkHitbox->width) > (p2->bodyHitbox->x))
+            if ((p1->atkHitboxTick != 0) &&
+                ((p1->atkHitbox->x + p1->atkHitbox->width) > (p2->bodyHitbox->x)))
                 return 1;
             if ((p2->atkHitboxTick != 0) &&
                 ((p2->atkHitbox->x - p2->atkHitbox->width) < (p1->bodyHitbox->x + p1->bodyHitbox->width)))
@@ -120,9 +138,8 @@ unsigned char checkComboHit (player *p1, player *p2) {
         (p1->bodyHitbox->y < p2->comboHitbox->y + p2->comboHitbox->height)))) {
 
         if (p1->facing == 0 && p2->facing == 1) {
-            if ((p1->comboHitbox->x + p1->comboHitbox->width) > (p2->bodyHitbox->x)) {
+            if ((p1->comboHitbox->x + p1->comboHitbox->width) > (p2->bodyHitbox->x)) 
                 return 1;
-            }
             if ((p2->comboCooldown != 0) &&
                 ((p2->comboHitbox->x - p2->comboHitbox->width) < (p1->bodyHitbox->x + p1->bodyHitbox->width)))
                 return 1;
@@ -136,6 +153,7 @@ unsigned char checkComboHit (player *p1, player *p2) {
                 return 1;
         }
     }
+    return 0;
 }
 
 unsigned char checkWallCollision (player *element) {
@@ -257,11 +275,14 @@ void updateComboHitbox (player *p1, player *p2) {
         p1->atkHitbox->y = 0;
         p1->atkHitbox->height = 0;
     }
+
     switch (p1->comboSuccess) {
+        case 0:
+            break;
         case 1:
             if (p1->onGround) {
-                p1->comboCooldown = SUPER_HADOUKEN_COOLDOWN;
-                p1->comboDamage = SUPER_HADOUKEN_DAM;
+                p1->comboCooldown = RYU_COMBO_COOLDOWN;
+                p1->comboDamage = COMBO_DAM;
                 p1->comboHitbox->y = Y_GROUND - P_HEIGHT;
                 p1->comboHitbox->height = P_HEIGHT;
                 if (p1->facing == 0) {
@@ -275,18 +296,92 @@ void updateComboHitbox (player *p1, player *p2) {
             }
             break;
         case 2:
+            if (p1->onGround) {
+                p1->comboCooldown = CHUNLI_COMBO_COOLDOWN;
+                p1->comboDamage = COMBO_DAM;
+                p1->comboHitbox->y = Y_GROUND - P_HEIGHT - (P_CROUCH_HEIGHT/2);
+                p1->comboHitbox->height = P_HEIGHT + (P_CROUCH_HEIGHT/2);
+                if (p1->facing == 0) {
+                    p1->comboHitbox->x = p1->bodyHitbox->x + p1->bodyHitbox->width;
+                    p1->comboHitbox->width = P_WIDTH*2;
+                }
+                else {
+                    p1->comboHitbox->x = p1->bodyHitbox->x;
+                    p1->comboHitbox->width = P_WIDTH*2;
+                }
+            }
             break;
         case 3:
             break;
+        case 4:
+            break;
     }
+    
     if (checkComboHit(p1, p2)) {
-        printf("%d\n",p1->comboDamage);
         p2->isDamaged = p1->comboDamage;
     }
 
+    if (p2->comboCooldown == 0) {
+        p2->comboDamage = 0;
+        p2->comboHitbox->x = 0;
+        p2->comboHitbox->width = 0;
+        p2->comboHitbox->y = 0;
+        p2->comboHitbox->height = 0;
+    }
+    else {
+        p2->atkHitbox->x = 0;
+        p2->atkHitbox->width = 0;
+        p2->atkHitbox->y = 0;
+        p2->atkHitbox->height = 0;
+    }
+
+    switch (p2->comboSuccess) {
+        case 0:
+            break;
+        case 5:
+            if (p2->onGround) {
+                p2->comboCooldown = RYU_COMBO_COOLDOWN;
+                p2->comboDamage = COMBO_DAM;
+                p2->comboHitbox->y = Y_GROUND - P_HEIGHT;
+                p2->comboHitbox->height = P_HEIGHT;
+                if (p2->facing == 0) {
+                    p2->comboHitbox->x = p2->bodyHitbox->x + p2->bodyHitbox->width;
+                    p2->comboHitbox->width = X_SCREEN - (p2->bodyHitbox->x + p2->bodyHitbox->width);
+                }
+                else {
+                    p2->comboHitbox->x = p2->bodyHitbox->x;
+                    p2->comboHitbox->width = p2->bodyHitbox->x;
+                }
+            }
+            break;
+        case 6:
+            if (p2->onGround) {
+                p2->comboCooldown = CHUNLI_COMBO_COOLDOWN;
+                p2->comboDamage = COMBO_DAM;
+                p2->comboHitbox->y = Y_GROUND - P_HEIGHT - (P_CROUCH_HEIGHT/2);
+                p2->comboHitbox->height = P_HEIGHT + (P_CROUCH_HEIGHT/2);
+                if (p2->facing == 0) {
+                    p2->comboHitbox->x = p2->bodyHitbox->x + p2->bodyHitbox->width;
+                    p2->comboHitbox->width = P_WIDTH*2;
+                }
+                else {
+                    p2->comboHitbox->x = p2->bodyHitbox->x;
+                    p2->comboHitbox->width = P_WIDTH*2;
+                }
+            }
+            break;
+        case 7:
+            break;
+        case 8:
+            break;
+    }
+
+    if (checkComboHit(p1, p2)) {
+        p1->isDamaged = p2->comboDamage;
+    }
 }
 
-void updateAtkHitbox (player *p1, player *p2) { // para simplificar os textos
+void updateAtkHitbox (player *p1, player *p2) {
     if (p1->atkHitboxTick != 0)
         p1->atkHitboxTick--;
     if (p2->atkHitboxTick != 0)
