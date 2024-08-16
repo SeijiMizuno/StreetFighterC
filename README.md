@@ -21,3 +21,8 @@ To run the game, follow these steps:
 
 ```bash
 make
+
+## Notes
+
+- The game has **not been tested on Windows**, so its proper functioning on that platform cannot be guaranteed.
+- Don't forget to unzip the file sym22-T3T4.tar.gz
