@@ -21,7 +21,7 @@ To run the game, follow these steps:
 
 ```bash
 make
-
+```
 ## Notes
 
 - The game has **not been tested on Windows**, so its proper functioning on that platform cannot be guaranteed.
