@@ -1,6 +1,6 @@
 # Fighting Game - Programming 2 Project
 
-This project was developed for the **Programming 2** course in the **Bachelor's Degree in Computer Science** at UFPR.
+This project was developed for the **Programming 2** course in the **Bachelor's Degree in Computer Science** at UFPR (in 2024).
 
 ## Objective
 
@@ -21,6 +21,7 @@ To run the game, follow these steps:
 
 ```bash
 make
+./AS
 ```
 
 ## Notes
